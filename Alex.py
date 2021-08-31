@@ -3,9 +3,13 @@ import random
 import math
 import time
 pygame.init()
-random.seed()
+random.seed()       # Analyze Code
 
-
+# change from wave survival to open world survival:     Jumping is supposed to be hard, zombies are supposed to be hard to get passed, this is why you need to scavenge to fight
+    
+    # more loot, buildings with open and closable doors, grow food
+    # LAN muiltiplayer
+   
 
 GameStart = pygame.mixer.Sound("Funny.wav")
 GunShot = pygame.mixer.Sound("Gun1.wav")
@@ -43,7 +47,7 @@ class player:
     
     left = False
     right = False
-    walkCount = 0
+    walkCount = 0 
     direction = True
     Ammo = 10
     ball_changex = 0
@@ -72,7 +76,7 @@ class player:
         
         if self.left:  # If we are facing left
             gameDisplay.blit(self.walkLeft[self.walkCount//3], (x,y))  
-            self.walkCount += 1                 
+            self.walkCount += 1        
             self.direction = False
         if self.right:
             gameDisplay.blit(self.walkRight[self.walkCount//3], (x,y))
@@ -130,18 +134,18 @@ class player:
         if not(self.direction):
             gameDisplay.blit(ShogunR, (x,y))
 
-    def AxeH(self, x,y):
+    def AxeH(self, x,y): # axehold
         if self.direction: 
             gameDisplay.blit(self.AxeHL, (x+7,y+5)) 
         if not(self.direction): # right
             gameDisplay.blit(self.AxeHR, (x-18,y+5))
-    def AxeW(self, x,y):
+    def AxeW(self, x,y): # axewack
         if self.direction: 
             gameDisplay.blit(self.AxeL, (x+10,y)) 
         if not(self.direction): # right
             gameDisplay.blit(self.AxeR, (x-10,y))
             
-    def HoldB(self):
+    def HoldB(self): # hold block
         if self.direction: 
             gameDisplay.blit(BLOCKS.BlockSelect, (self.ballx+50, self.bally+40))
         if not(self.direction): 
@@ -283,7 +287,7 @@ class Zombie:
     
 
     
-    def __init__(self, X, CorH): # CorH can be an array with random inside
+    def __init__(self, X, CorH): # CorH can be an array with random inside parameter
         Zombie.ZNum += 1 # Adds another Zombie along
         if CorH:
             pygame.mixer.Sound.play(ZombiesYell)
@@ -319,8 +323,8 @@ class Zombie:
 
     def Reanimate(X, CorH, i): # instead of adding data to lists just modify existing so amount of data corresponds to amount of living Zombies
         Zombie.ZNum += 1 
-        if CorH:
-            pygame.mixer.Sound.play(ZombiesYell)
+        if CorH: # if hunter 
+            #pygame.mixer.Sound.play(ZombiesYell) # respawn
             Zombie.Hunter[i] = True
         else:
             Zombie.Hunter[i] = False
@@ -334,7 +338,7 @@ class Zombie:
         
 
     #@classmethod @staticmethod
-    def Crawlers(i):
+    def Crawlers(i):                            # animations
         if not(Zombie.Hunter[i]):
             if Zombie.CrawlerCount[i] + 1 >= 15: # this controls how many times a image is shown
                 Zombie.CrawlerCount[i] = 0 # >= x must be a 3rd multiple of the //x
@@ -357,31 +361,31 @@ class Zombie:
                 Zombie.CrawlerCount[i] += 1
             
 
-    def LetLoose(i,x):
+    def LetLoose(i,x):                              # Movement
             if Zombie.Health[i] > 0:
                 Zombie.Crawlers(i) # animation initializers
             if not(Zombie.Hunter[i]):
                 if(Zombie.crawlx[i] >= x): # Crawler Movement
                     if not(Z.NoBlockL[i]):
                         Zombie.crawlx[i] -= 1  #( follow player )
-                    Zombie.cleft[i] = True # Animation Settings
-                    Zombie.cright[i] = False
+                        Zombie.cleft[i] = True # Animation Settings
+                        Zombie.cright[i] = False
                 if(Zombie.crawlx[i] <= x):
                     if not(Z.NoBlockR[i]):
                         Zombie.crawlx[i] += 1
-                    Zombie.cleft[i] = False
-                    Zombie.cright[i] = True
+                        Zombie.cleft[i] = False
+                        Zombie.cright[i] = True
             else:
-                if(Zombie.crawlx[i]+88 >= x): # Crawler Movement
-                    if not(Z.NoBlockL[i]):
-                        Zombie.crawlx[i] -= 3  #( follow player )
-                    Zombie.cleft[i] = True # Animation Settings
-                    Zombie.cright[i] = False
-                if(Zombie.crawlx[i]+88 <= x):
+                if(Zombie.crawlx[i]+88 >= x and x >= Zombie.crawlx[i]+88 - 300): # hunter Movement, update: hunters will not chase unless approached, this makes the game less 'wave' like and more survival
+                    if not(Z.NoBlockL[i]):  # hunter wake up is determined by player falling into a certain area behind or infront of it
+                        Zombie.crawlx[i] -= 3  
+                        Zombie.cleft[i] = True 
+                        Zombie.cright[i] = False
+                if(Zombie.crawlx[i]+88 <= x and x <= Zombie.crawlx[i] + 300): # x[i]+88 is to compensate for the image offset of the hunters
                     if not(Z.NoBlockR[i]):
                         Zombie.crawlx[i] += 3
-                    Zombie.cleft[i] = False
-                    Zombie.cright[i] = True
+                        Zombie.cleft[i] = False
+                        Zombie.cright[i] = True
                 
         
 
@@ -438,7 +442,7 @@ TreeS = random.randint(0,2)
 
 
 pygame.mixer.Sound.play(GameStart)
-H = Helicopter() # HELI CLASS
+#H = Helicopter() # HELI CLASS
 #pygame.mixer.Sound.play(ZombiesYell) # Hunter yell with new Z
 pygame.mixer.Sound.play(ZombieScream) # Group Yell every few score
 
@@ -471,15 +475,37 @@ areaZL = 0
 areaZR = 0
 Cancel = False
 
+def text_objects(text, font):
+    textSurface = font.render(text, True, black)
+    return textSurface, textSurface.get_rect()
 
-while not crashed:    
-    gameDisplay.blit(bg1, (bgX1, 0))
+def message_display(text, text2, text3):
+    largeText = pygame.font.Font('freesansbold.ttf',30)
+    TextSurf, TextRect = text_objects(text, largeText)
+    TextSurf1, TextRect1 = text_objects(text2, largeText)
+    TextSurf2, TextRect2 = text_objects(text3, largeText)
+    TextRect.center = ((100),(100))
+    TextRect1.center = ((100),(130))
+    TextRect2.center = ((100),(160))
+    gameDisplay.blit(TextSurf, TextRect)
+    gameDisplay.blit(TextSurf1, TextRect1)
+    gameDisplay.blit(TextSurf2, TextRect2)
+
+font = pygame.font.Font('freesansbold.ttf',50)
+
+while not crashed:          
+    gameDisplay.blit(bg1, (bgX1, 0)) # Backgrounds
     gameDisplay.blit(bg, (bgX, 0))
     gameDisplay.blit(bg2, (bgX2, 0)) # its at the end of original img
     
-    hats = joysticks.get_numhats() 
+    message_display("Ammo: "+str(P.Ammo), "Stamina "+str(P.Stamina), "Wood: "+str(P.Wood)) # Display Player Values
+   
+    
+    hats = joysticks.get_numhats()
 
-    for i in range(hats):
+    
+
+    for i in range(hats):                   # DPAD CONTROLS WITH SCREEN SHIFTING
             hat = joysticks.get_hat(i)
             #print("{}: {}".format(i, str(hat)))
             Dpad = str(hat)
@@ -522,8 +548,9 @@ while not crashed:
                     P.up = True
                 if(P.bally >= 520):
                     P.bally = 520
+                    
 
-            if Dpad == "(1, 1)": # JRight
+            if Dpad == "(1, 1)": # JRight -1.4
                 if P.bally >= 450: 
                     P.air = True
                     P.up = True
@@ -561,7 +588,7 @@ while not crashed:
                 
 
             if Dpad == "(0, -1)": # down inventory control
-                increment += 1 # Bat and Shotgun
+                increment += 1 
 
             if Dpad == "(0, 0)": # Default
                 bgX1_change = 0
@@ -579,7 +606,7 @@ while not crashed:
     for event in pygame.event.get(): # print events by how many times it occurs 
         if event.type == pygame.QUIT:
             crashed = True
-        if event.type == pygame.JOYBUTTONDOWN:
+        if event.type == pygame.JOYBUTTONDOWN: # ACTION BUTTON
             bulletx = P.ballx+10
             BLOCKS.BlockPlaced = True 
             if inventory == 1: # Gun
@@ -594,7 +621,7 @@ while not crashed:
                     else:
                         Z = Zombie(random.randint(player.ballx+1000,player.ballx+2000),False)
                     if P.direction:
-                        BLOCKS.Blocks += 1
+                        BLOCKS.Blocks += 1 
                         P.Wood -= 1
                         BLOCKS.Blockx.append(P.ballx+50)
                         BLOCKS.Blocky.append(P.bally+40)
@@ -614,7 +641,7 @@ while not crashed:
             
     # Animations
     
-    if increment > 30:
+    if increment > 30: # inventory selection
         inventory = 0
     if increment > 40:
         increment = 0
@@ -745,14 +772,14 @@ while not crashed:
         if shoot:
             if P.Ammo > 0:
                 pygame.mixer.Sound.play(GunShot)
-                P.Ammo -= 1
+                P.Ammo -= 1 
                 bulletfly = True
             shoot = False
     #print(Zombie.ZNum) number stays 
     #print(Zombie.Health) data doesnt 
 ######################################### Zombie Crawler Spawn & Health
     for i in range(Zombie.ZNum):
-        if Zombie.Health[i] >= 0: # if still alive
+        if Zombie.Health[i] > 0: # if still alive
             if Zombie.Hunter[i]:
                 areaZ = math.hypot((Zombie.crawlx[i]+88) - P.ballx,Zombie.crawly-P.bally) # Zombie collision
                 areaBullet = math.hypot(bulletx - (Zombie.crawlx[i]+88),P.bally-P.bally) # Bullet
@@ -765,7 +792,7 @@ while not crashed:
                 crashed = True
                 #quit()
             Zombie.LetLoose(i,P.ballx) # the incrementing i in the loop is a function parameter so theres not another loop inside the function
-        if Zombie.Health[i] == 0:
+        if Zombie.Health[i] == 0: 
             #H.heliPick() # call helicopter
             #Helicopter.Call = True # with heliPick
             Zombie.ZNum -= 1
@@ -788,7 +815,7 @@ while not crashed:
         if inventory == 2: # Axe holding
             P.AxeH(P.ballx+10, P.bally)
             if not(Zombie.Hunter[i]):
-                if P.Stamina > 0:
+                if P.Stamina > 0: 
                     if AxeAttack and areaZ <= 60:
                         P.Stamina -= 1
                         pygame.mixer.Sound.play(BlockTearDown)
@@ -833,8 +860,11 @@ while not crashed:
                         else:
                             gameDisplay.blit(Zombie.DamageL, (Zombie.crawlx[i],Zombie.crawly))
                         bulletx = P.ballx+10 # reset bullet positions
+                        Zombie.Health[i] = Zombie.Health[i] - 2.5 # Damage
+                    else:
+                        bulletx = P.ballx+10 # reset bullet positions
+                        Zombie.Health[i] = Zombie.Health[i] - 5 # Damage
                     bullet_changex = 0
-                    Zombie.Health[i] = Zombie.Health[i] - 2.5 # Damage 
                     bulletfly = False
                 if(bulletx <= 10): # Bullet Boundaries 
                     bulletx = P.ballx+10 # reset bullet positions
@@ -868,7 +898,7 @@ while not crashed:
                 for i in range(BLOCKS.Blocks):   
                     gameDisplay.blit(BLOCKS.Block, (BLOCKS.Blockx[i], BLOCKS.Blocky[i])) 
                 pygame.display.update()
-            P.Stamina += 4
+            P.Stamina += 7
             LeftorRightZ = [True, False]
             if LeftorRightZ[random.randint(0,1)]: #SPAWN
                 Drinkx = P.ballx-1000
@@ -886,9 +916,9 @@ while not crashed:
                     gameDisplay.blit(BLOCKS.Block, (BLOCKS.Blockx[i], BLOCKS.Blocky[i])) 
                 pygame.display.update()
             if TreeS == 0:
-                P.Wood += .5 # get block from hitting tree
+                P.Wood += .8 # get block from hitting tree
             else:
-                P.Wood += .4
+                P.Wood += .5
             LeftorRightZ = [True, False]
             if LeftorRightZ[random.randint(0,1)]: #SPAWN
                 Treex = P.ballx-1000 # Spawn new Tree
@@ -926,13 +956,14 @@ while not crashed:
         gameDisplay.blit(BLOCKS.Block, (BLOCKS.Blockx[i], BLOCKS.Blocky[i]))
         if BLOCKS.Health[i] == 0:
             BLOCKS.Blockx[i] = 0
-            BLOCKS.Blocky[i] = 5000 # erase 
+            BLOCKS.Blocky[i] = 5000 # erase
+            
 
     Tree.TreeSpawn(Treex,TreeS) # Trees
     Energy.DrinkSpawn(Drinkx)
             
     pygame.display.update()
-    clock.tick(60)
+    clock.tick(65)
 
 pygame.quit()
 quit()
